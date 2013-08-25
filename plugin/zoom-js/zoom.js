@@ -2,6 +2,8 @@
 (function(){
 	var isEnabled = true;
 
+	var currentSlide = null;
+
 	document.querySelector( '.reveal' ).addEventListener( 'mousedown', function( event ) {
 		if( event.altKey && isEnabled ) {
 			event.preventDefault();
@@ -9,8 +11,42 @@
 		}
 	} );
 
+	document.addEventListener( 'keydown', function( event ) {
+		if (!currentSlide) {
+			return;
+		}
+		//console.log(event.keyCode);
+
+		if (currentSlide.getElementsByTagName("img").length > 0) {
+			var img = currentSlide.getElementsByTagName("img")[0];
+			console.log(img.getBoundingClientRect());
+			//console.log(currentSlide.getElementsByTagName("img"));
+			if( event.keyCode == 49 && isEnabled ) { //1
+				event.preventDefault();
+				var bounds = img.getBoundingClientRect();
+				zoom.to({ x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height, pan: true, scale: 1.5 });
+			}
+			if( event.keyCode == 50 && isEnabled ) { //2
+				event.preventDefault();
+				var bounds = img.getBoundingClientRect();
+				console.log(bounds.left + (bounds.width / 2));
+				zoom.to({ x: bounds.left + (bounds.width / 2 / 1.5), y: bounds.top, width: bounds.width, height: bounds.height, pan: true, scale: 1.5 });
+			}
+			if( event.keyCode == 192 && isEnabled ) {
+				event.preventDefault();
+				zoom.to({ element: img, pan: true });
+			}
+		}
+	} );
+
 	Reveal.addEventListener( 'overviewshown', function() { isEnabled = false; } );
 	Reveal.addEventListener( 'overviewhidden', function() { isEnabled = true; } );
+
+	Reveal.addEventListener( 'slidechanged', function( event ) {
+    	// event.previousSlide, event.currentSlide, event.indexh, event.indexv
+    	currentSlide = event.currentSlide;
+    	//console.log(currentSlide);
+	} );
 })();
 
 /*!
@@ -77,6 +113,8 @@ var zoom = (function(){
 	 * @param {Number} scale
 	 */
 	function magnify( pageOffsetX, pageOffsetY, elementOffsetX, elementOffsetY, scale ) {
+
+		console.log(supportsTransforms + " px:" + pageOffsetX + " py:" + pageOffsetY + " ex:" + elementOffsetX + " ey:" + elementOffsetY + " s:" + scale)
 
 		if( supportsTransforms ) {
 			var origin = pageOffsetX +'px '+ pageOffsetY +'px',
@@ -179,6 +217,7 @@ var zoom = (function(){
 				zoom.out();
 			}
 			else {
+				//console.log("to:" + options.x + "," + options.y);
 				options.x = options.x || 0;
 				options.y = options.y || 0;
 
@@ -194,7 +233,7 @@ var zoom = (function(){
 				}
 
 				// If width/height values are set, calculate scale from those values
-				if( options.width !== undefined && options.height !== undefined ) {
+				if( options.width !== undefined && options.height !== undefined && !options.scale ) {
 					options.scale = Math.max( Math.min( window.innerWidth / options.width, window.innerHeight / options.height ), 1 );
 				}
 
